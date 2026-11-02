@@ -1,0 +1,72 @@
+trial 1/60  score=15.152
+trial 2/60  score=13.619
+trial 3/60  score=15.437
+trial 4/60  score=16.313
+trial 5/60  score=14.606
+trial 6/60  score=13.781
+trial 7/60  score=14.086
+trial 8/60  score=14.372
+trial 9/60  score=14.355
+trial 10/60  score=14.360
+trial 11/60  score=13.460
+trial 12/60  score=14.716
+trial 13/60  score=21.774
+trial 14/60  score=16.102
+trial 15/60  score=15.095
+trial 16/60  score=15.470
+trial 17/60  score=11.702
+trial 18/60  score=14.556
+trial 19/60  score=15.159
+trial 20/60  score=17.169
+trial 21/60  score=14.661
+trial 22/60  score=11.971
+trial 23/60  score=15.587
+trial 24/60  score=18.166
+trial 25/60  score=16.740
+trial 26/60  score=13.642
+trial 27/60  score=15.584
+trial 28/60  score=14.960
+trial 29/60  score=14.243
+trial 30/60  score=17.768
+trial 31/60  score=13.080
+trial 32/60  score=13.565
+trial 33/60  score=13.011
+trial 34/60  score=18.236
+trial 35/60  score=17.888
+trial 36/60  score=14.790
+trial 37/60  score=14.250
+trial 38/60  score=13.396
+trial 39/60  score=19.038
+trial 40/60  score=16.909
+trial 41/60  score=13.438
+trial 42/60  score=15.211
+trial 43/60  score=14.349
+trial 44/60  score=12.322
+trial 45/60  score=14.449
+trial 46/60  score=14.067
+trial 47/60  score=11.738
+trial 48/60  score=14.776
+trial 49/60  score=18.483
+trial 50/60  score=16.460
+trial 51/60  score=14.208
+trial 52/60  score=14.104
+trial 53/60  score=17.309
+trial 54/60  score=13.318
+trial 55/60  score=19.235
+trial 56/60  score=16.996
+trial 57/60  score=13.635
+trial 58/60  score=14.838
+trial 59/60  score=15.462
+trial 60/60  score=16.643
+
+=== best 5 (the empty {} is the current default) ===
+score=11.702 PSNR=20.74 SSIM=0.823 dE=9.54 GMSD=0.0510 noise=3.95 sharp=71.6 colourful=73.4
+    {'alpha': 0.5, 'wb_strength': 0.5, 'stretch_strength': 0.8, 'beta': 0.2, 'clahe_clip': 1.0, 'chroma_gain': 1.15, 'hist_mode': 'L'}
+score=11.738 PSNR=21.42 SSIM=0.838 dE=9.38 GMSD=0.0538 noise=4.16 sharp=76.5 colourful=45.9
+    {'alpha': 1.5, 'wb_strength': 0.5, 'stretch_strength': 0.5, 'beta': 0.2, 'clahe_clip': 1.5, 'chroma_gain': 1.0, 'hist_mode': 'rgb'}
+score=11.971 PSNR=20.66 SSIM=0.805 dE=9.38 GMSD=0.0579 noise=4.07 sharp=73.7 colourful=81.3
+    {'alpha': 1.0, 'wb_strength': 0.5, 'stretch_strength': 0.8, 'beta': 0.4, 'clahe_clip': 1.0, 'chroma_gain': 1.4, 'hist_mode': 'L'}
+score=12.066 PSNR=21.13 SSIM=0.825 dE=9.78 GMSD=0.0609 noise=4.33 sharp=78.1 colourful=65.2
+    {}
+score=12.322 PSNR=21.32 SSIM=0.827 dE=9.71 GMSD=0.0625 noise=4.58 sharp=83.3 colourful=56.2
+    {'alpha': 1.0, 'wb_strength': 0.5, 'stretch_strength': 0.8, 'beta': 0.4, 'clahe_clip': 1.5, 'chroma_gain': 1.0, 'hist_mode': 'rgb'}

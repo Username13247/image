@@ -42,3 +42,10 @@ for w in (0.0, 0.5, 1.0):
 q2.CFG["wb_strength"] = 0.5
 for sl in (1.5, 3.0, 6.0):
     q2.CFG["max_slope"] = sl; show(f"max_slope={sl}", score(q2.enhance_underwater))
+q2.CFG["max_slope"] = 3.0
+for g in (1.0, 1.25, 1.5, 1.75):
+    q2.CFG["chroma_gain"] = g; show(f"chroma_gain={g}", score(q2.enhance_underwater))
+q2.CFG["chroma_gain"] = 1.25
+for md in ("L", "rgb"):
+    q2.CFG["hist_mode"] = md; show(f"hist_mode={md}", score(q2.enhance_underwater))
+q2.CFG["hist_mode"] = "L"
