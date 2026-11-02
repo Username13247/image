@@ -26,12 +26,19 @@ show("FULL pipeline", score(q2.enhance_underwater))
 for s in q2.STEPS:
     show(f"without {s}", score(lambda x, s=s: q2.enhance_underwater(x, skip=(s,))))
 
+# restore after sweeps
 print("\n--- sweeps (fixed globally, pick ONE value for all images) ---")
-for beta in (0.0, 0.3, 0.6, 0.8, 1.0):
+for beta in (0.0, 0.2, 0.4, 0.6, 1.0):
     q2.CFG["beta"] = beta; show(f"beta={beta}", score(q2.enhance_underwater))
-q2.CFG["beta"] = 0.6
-for clip in (1.0, 2.0, 3.0, 4.0):
+q2.CFG["beta"] = 0.4
+for clip in (1.0, 1.5, 2.0, 3.0):
     q2.CFG["clahe_clip"] = clip; show(f"clahe_clip={clip}", score(q2.enhance_underwater))
-q2.CFG["clahe_clip"] = 2.0
+q2.CFG["clahe_clip"] = 1.5
 for a in (0.0, 0.5, 1.0, 1.5):
     q2.CFG["alpha"] = a; show(f"alpha={a}", score(q2.enhance_underwater))
+q2.CFG["alpha"] = 1.0
+for w in (0.0, 0.5, 1.0):
+    q2.CFG["wb_strength"] = w; show(f"wb_strength={w}", score(q2.enhance_underwater))
+q2.CFG["wb_strength"] = 0.5
+for sl in (1.5, 3.0, 6.0):
+    q2.CFG["max_slope"] = sl; show(f"max_slope={sl}", score(q2.enhance_underwater))

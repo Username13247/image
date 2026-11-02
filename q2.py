@@ -39,15 +39,20 @@ GIVEN_REF = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "ui
 # ---------------------------------------------------------------------------
 CFG = dict(
     alpha=1.0,          # red compensation strength
-    gain_lo=0.5,        # gray-world gains are clipped to [gain_lo, gain_hi]
-    gain_hi=2.0,
-    clahe_clip=2.0,     # CLAHE clip limit (on L channel)
+    gain_lo=0.7,        # gray-world gains are clipped to [gain_lo, gain_hi]
+    gain_hi=1.5,
+    wb_strength=0.5,    # gains**wb_strength: 0 = no balancing, 1 = full gray world
+    den_d=7,            # bilateral denoise: neighbourhood diameter
+    den_sc=20,          # bilateral: colour sigma (gray levels)
+    den_ss=5,           # bilateral: spatial sigma (pixels)
+    max_slope=3.0,      # histogram-spec LUT: maximum slope (limits noise/banding amplification)
+    clahe_clip=1.5,     # CLAHE clip limit (on L channel)
     clahe_tile=8,       # CLAHE tile grid (8x8)
-    beta=0.6,           # blend weight of histogram specification (0 = off, 1 = full)
+    beta=0.4,           # blend weight of histogram specification (0 = off, 1 = full)
     usm_sigma=2.0,      # unsharp mask Gaussian sigma
-    usm_amount=0.5,     # unsharp mask strength
+    usm_amount=0.3,     # unsharp mask strength
 )
-STEPS = ("red", "wb", "clahe", "hist", "sharpen")
+STEPS = ("denoise", "red", "wb", "clahe", "hist", "sharpen")
 
 _TARGET_CDF = None  # cached mean CDF of the given references, shape (3, 256), BGR order
 
@@ -89,10 +94,10 @@ def red_compensation(f, alpha):
     return out
 
 
-def gray_world(f, lo, hi):
+def gray_world(f, lo, hi, strength=1.0):
     """Remaining colour cast (blue / green) fix: scale each channel so channel means are equal."""
     means = f.reshape(-1, 3).mean(axis=0) + 1e-6
-    gains = np.clip(means.mean() / means, lo, hi)
+    gains = np.clip((means.mean() / means) ** strength, lo, hi)
     return np.clip(f * gains, 0, 1)
 
 
@@ -106,7 +111,7 @@ def clahe_lightness(img8, clip, tile):
 
 
 # ----------------------------- technique 3: histogram specification ----------------
-def hist_specification(img8, target_cdf, beta):
+def hist_specification(img8, target_cdf, beta, max_slope=3.0):
     """Per-channel histogram matching to the mean reference histogram, blended with the input:
     out = beta*matched + (1-beta)*input. Own implementation via CDF inversion."""
     out = np.empty_like(img8)
@@ -116,6 +121,11 @@ def hist_specification(img8, target_cdf, beta):
         cdf = np.cumsum(h)
         cdf /= cdf[-1]
         lut = np.interp(cdf, target_cdf[c], levels)   # for each input level, level with equal CDF
+        # regularise the LUT: smooth it and cap its slope so sparsely populated ranges
+        # (e.g. the almost-empty red channel) are not stretched into noise / banding
+        k = np.exp(-0.5 * (np.arange(-6, 7) / 2.0) ** 2); k /= k.sum()
+        lut = np.convolve(np.pad(lut, 6, mode="edge"), k, mode="valid")
+        lut = lut[0] + np.concatenate([[0.0], np.cumsum(np.clip(np.diff(lut), 0, max_slope))])
         out[..., c] = np.clip(lut, 0, 255).astype(np.uint8)[img8[..., c]]
     mixed = beta * out.astype(np.float32) + (1 - beta) * img8.astype(np.float32)
     return np.clip(mixed + 0.5, 0, 255).astype(np.uint8)
@@ -134,22 +144,25 @@ def enhance_underwater(img, skip=()):
     img : uint8 array of shape (H, W, 3), BGR (as read by cv2.imread)
     returns : uint8 array of shape (H, W, 3), BGR
 
-    Pipeline: red compensation -> gray world -> CLAHE(L) -> histogram specification -> unsharp mask.
+    Pipeline: bilateral denoise -> red compensation -> gray world -> CLAHE(L) -> histogram specification -> unsharp mask.
     `skip` (tuple of names in STEPS) is only used for the ablation study; default = full pipeline.
     """
     c = CFG
+    if "denoise" not in skip:
+        # placed FIRST: every later step boosts contrast and would amplify noise / JPEG blocks
+        img = cv2.bilateralFilter(img, c["den_d"], c["den_sc"], c["den_ss"])
     f = img.astype(np.float32) / 255.0
     if "red" not in skip:
         f = red_compensation(f, c["alpha"])
     if "wb" not in skip:
-        f = gray_world(f, c["gain_lo"], c["gain_hi"])
+        f = gray_world(f, c["gain_lo"], c["gain_hi"], c["wb_strength"])
     out = np.clip(f * 255.0 + 0.5, 0, 255).astype(np.uint8)
     if "clahe" not in skip:
         out = clahe_lightness(out, c["clahe_clip"], c["clahe_tile"])
     if "hist" not in skip:
         tcdf = _load_target_cdf()
         if tcdf is not False:
-            out = hist_specification(out, tcdf, c["beta"])
+            out = hist_specification(out, tcdf, c["beta"], c["max_slope"])
     if "sharpen" not in skip:
         out = unsharp_mask(out, c["usm_sigma"], c["usm_amount"])
     return out
