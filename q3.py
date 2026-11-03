@@ -30,6 +30,20 @@ import numpy as np
 from q1 import enhance_low_light   # must be used unchanged
 from q2 import enhance_underwater  # must be used unchanged
 
+LOL_REF_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "lol", "high")
+UIEB_REF_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "uieb", "reference")
+
+
+# gray level -> BGR color: blue -> cyan -> green -> yellow -> red
+_STOPS = np.array([0.0, 0.25, 0.5, 0.75, 1.0], dtype=np.float32)
+_COLORS = np.array([
+    [255,   0,   0],   # blue   (BGR order!)
+    [255, 255,   0],   # cyan
+    [  0, 255,   0],   # green
+    [  0, 255, 255],   # yellow
+    [  0,   0, 255],   # red
+], dtype=np.float32)
+    
 
 def pseudo_color(gray):
     """
@@ -40,9 +54,19 @@ def pseudo_color(gray):
     transformation) YOURSELF. Library colormaps (cv2.applyColorMap,
     matplotlib colormaps, ...) are NOT allowed.
     """
-    # TODO
+    g = np.clip(gray, 0.0, 1.0).astype(np.float32)
+    
+    out = np.empty(g.shape + (3,), dtype=np.float32)
+    for c in range(3):
+        out[..., c] = np.interp(g, _STOPS, _COLORS[:, c])
+
+    return np.clip(np.rint(out), 0, 255).astype(np.uint8)
+    
     g = (np.clip(gray, 0, 1) * 255).astype(np.uint8)
     return np.dstack([g, g, g])
+
+
+ERR_MAX = 128.0   # fixed saturation level (intensity levels), same for every image
 
 
 def error_map(output, reference):
@@ -51,9 +75,18 @@ def error_map(output, reference):
     reference (both uint8 BGR). Choose and justify the error definition and
     the normalization (e.g. a fixed maximum, so maps can be compared).
     """
-    # TODO
-    err = np.zeros(output.shape[:2])
-    return pseudo_color(err)
+    diff = np.abs(output.astype(np.float32) - reference.astype(np.float32))
+    err = diff.mean(axis=2)
+
+    return pseudo_color(np.clip(err / ERR_MAX, 0.0, 1.0))
+def save_error_maps(error_map, result_dir, ref_dir, out_dir):
+    os.makedirs(out_dir, exist_ok=True)
+    for name in sorted(os.listdir(result_dir)):
+        result_img = cv2.imread(os.path.join(result_dir, name), cv2.IMREAD_COLOR)
+        ref_img = cv2.imread(os.path.join(ref_dir, name), cv2.IMREAD_COLOR)
+        if result_img is None or ref_img is None:
+            continue
+        cv2.imwrite(os.path.join(out_dir, name), error_map(result_img,ref_img))
 
 
 def run(pipeline, in_dir, out_dir):
@@ -70,13 +103,33 @@ def main():
     ap.add_argument("--lol", required=True, help="folder of LOL low-light images")
     ap.add_argument("--uieb", required=True, help="folder of UIEB raw images")
     ap.add_argument("--output", required=True, help="output root folder")
+    ap.add_argument("--ref-uieb", required=False, help="folder of reference directory for under water images")
+    ap.add_argument("--ref-lol", required=False, help="folder of reference directory for low-light images")
+
     args = ap.parse_args()
     out = args.output
-    run(enhance_low_light, args.lol, os.path.join(out, "lol_pipeline_on_lol"))
-    run(enhance_low_light, args.uieb, os.path.join(out, "lol_pipeline_on_uieb"))
-    run(enhance_underwater, args.uieb, os.path.join(out, "uieb_pipeline_on_uieb"))
-    run(enhance_underwater, args.lol, os.path.join(out, "uieb_pipeline_on_lol"))
+    lol_on_lol=os.path.join(out, "lol_pipeline_on_lol")
+    lol_on_uieb=os.path.join(out, "lol_pipeline_on_uieb")
+    uieb_on_uieb=os.path.join(out, "uieb_pipeline_on_uieb")
+    uieb_on_lol= os.path.join(out, "uieb_pipeline_on_lol")
+    run(enhance_low_light, args.lol, lol_on_lol)
+    run(enhance_low_light, args.uieb, lol_on_uieb)
+    run(enhance_underwater, args.uieb, uieb_on_uieb)
+    run(enhance_underwater, args.lol, uieb_on_lol)
     # TODO: Q3.2 histograms and error maps (on the given pairs)
+
+    ref_lol=LOL_REF_DIR 
+    ref_uieb=UIEB_REF_DIR
+    if args.ref_lol is not None:
+        ref_lol=args.ref_lol
+    if args.ref_uieb is not None:
+        ref_uieb=args.ref_uieb
+    
+
+    save_error_maps(error_map, lol_on_lol, ref_lol, os.path.join(out, "error_maps_lol_lol"))
+    save_error_maps(error_map, lol_on_uieb, ref_uieb, os.path.join(out, "error_maps_lol_uieb"))
+    save_error_maps(error_map, uieb_on_uieb, ref_uieb, os.path.join(out, "error_maps_uieb_uieb"))
+    save_error_maps(error_map, uieb_on_lol, ref_lol, os.path.join(out, "error_maps_uieb_lol"))
 
 
 if __name__ == "__main__":
