@@ -1,8 +1,8 @@
 """
 CENG 466 - THE1 - Question 2: Underwater image enhancement (UIEB dataset)
 
-Student 1: Name Surname, ID
-Student 2: Name Surname, ID
+Student 1: Damla Paşaoğlu 
+Student 2: Ali AKın Duyar 2633147
 
 Usage:
     python q2.py --input <folder of raw underwater images> --output <output folder>
