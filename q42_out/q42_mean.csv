@@ -1,0 +1,13 @@
+dataset,combo,PSNR,SSIM,GMSD
+lol,decim_nearest,25.0515,0.7541,0.1396
+lol,decim_bilinear,26.7240,0.8003,0.1194
+lol,decim_bicubic,26.4619,0.7983,0.1222
+lol,gauss_nearest,26.7876,0.7650,0.1235
+lol,gauss_bilinear,27.0249,0.7805,0.1348
+lol,gauss_bicubic,27.4849,0.7929,0.1230
+uieb,decim_nearest,23.3939,0.6103,0.1348
+uieb,decim_bilinear,25.2209,0.6691,0.1156
+uieb,decim_bicubic,24.9976,0.6755,0.1171
+uieb,gauss_nearest,24.9897,0.6131,0.1236
+uieb,gauss_bilinear,25.2413,0.6248,0.1393
+uieb,gauss_bicubic,25.7359,0.6478,0.1245
